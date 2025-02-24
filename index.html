@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biology Learning Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #48B1BF, #06BEB6);
+        }
+        .game-card {
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Language Selection -->
+        <div class="text-right mb-4">
+            <select id="languageSelect" class="bg-white rounded-lg px-4 py-2 text-gray-800">
+                <option value="en">English</option>
+                <option value="hi">हिंदी</option>
+                <option value="kn">ಕನ್ನಡ</option>
+            </select>
+        </div>
+
+        <!-- Game Title -->
+        <h1 class="text-4xl font-bold text-white text-center mb-8" id="gameTitle">Human Body Systems Game</h1>
+
+        <!-- Score Display -->
+        <div class="text-white text-xl mb-8 text-center">
+            <span id="scoreLabel">Score:</span> <span id="score">0</span>
+        </div>
+
+        <!-- Level Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <button onclick="startLevel('digestive')" class="game-card p-6 rounded-xl text-white hover:transform hover:scale-105 transition-all">
+                <i class="bi bi-emoji-smile text-4xl mb-2"></i>
+                <h2 class="text-xl font-semibold" id="digestiveTitle">Digestive System</h2>
+            </button>
+            <button onclick="startLevel('respiratory')" class="game-card p-6 rounded-xl text-white hover:transform hover:scale-105 transition-all">
+                <i class="bi bi-wind text-4xl mb-2"></i>
+                <h2 class="text-xl font-semibold" id="respiratoryTitle">Respiratory System</h2>
+            </button>
+            <button onclick="startLevel('excretory')" class="game-card p-6 rounded-xl text-white hover:transform hover:scale-105 transition-all">
+                <i class="bi bi-droplet text-4xl mb-2"></i>
+                <h2 class="text-xl font-semibold" id="excretoryTitle">Excretory System</h2>
+            </button>
+            <button onclick="startLevel('circulatory')" class="game-card p-6 rounded-xl text-white hover:transform hover:scale-105 transition-all">
+                <i class="bi bi-heart text-4xl mb-2"></i>
+                <h2 class="text-xl font-semibold" id="circulatoryTitle">Circulatory System</h2>
+            </button>
+        </div>
+
+        <!-- Game Area -->
+        <div id="gameArea" class="hidden bg-white rounded-xl p-6">
+            <div id="question" class="text-xl mb-4"></div>
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+    </div>
+
+    <script>
+        // Background Music
+        const bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+        bgMusic.loop = true;
+
+        // Translations
+        const translations = {
+            en: {
+                gameTitle: "Human Body Systems Game",
+                scoreLabel: "Score:",
+                digestiveTitle: "Digestive System",
+                respiratoryTitle: "Respiratory System",
+                excretoryTitle: "Excretory System",
+                circulatoryTitle: "Circulatory System"
+            },
+            hi: {
+                gameTitle: "मानव शरीर प्रणाली खेल",
+                scoreLabel: "स्कोर:",
+                digestiveTitle: "पाचन तंत्र",
+                respiratoryTitle: "श्वसन प्रणाली",
+                excretoryTitle: "उत्सर्जन तंत्र",
+                circulatoryTitle: "परिसंचरण तंत्र"
+            },
+            kn: {
+                gameTitle: "ಮಾನವ ದೇಹ ವ್ಯವಸ್ಥೆ ಆಟ",
+                scoreLabel: "ಅಂಕ:",
+                digestiveTitle: "ಜೀರ್ಣಾಂಗವ್ಯವಸ್ಥೆ",
+                respiratoryTitle: "ಉಸಿರಾಟದ ವ್ಯವಸ್ಥೆ",
+                excretoryTitle: "ವಿಸರ್ಜನಾ ವ್ಯವಸ್ಥೆ",
+                circulatoryTitle: "ರಕ್ತ ಪರಿಚಲನಾ ವ್ಯವಸ್ಥೆ"
+            }
+        };
+
+        let currentScore = 0;
+        let currentLanguage = 'en';
+
+        // Update UI language
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('gameTitle').textContent = translations[lang].gameTitle;
+            document.getElementById('scoreLabel').textContent = translations[lang].scoreLabel;
+            document.getElementById('digestiveTitle').textContent = translations[lang].digestiveTitle;
+            document.getElementById('respiratoryTitle').textContent = translations[lang].respiratoryTitle;
+            document.getElementById('excretoryTitle').textContent = translations[lang].excretoryTitle;
+            document.getElementById('circulatoryTitle').textContent = translations[lang].circulatoryTitle;
+        }
+
+        // Language selector event listener
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            updateLanguage(e.target.value);
+        });
+
+        // Game questions database
+        const questions = {
+            digestive: [
+                {
+                    question: {
+                        en: "What is the first organ in the digestive system?",
+                        hi: "पाचन तंत्र का पहला अंग कौन सा है?",
+                        kn: "ಜೀರ್ಣಾಂಗವ್ಯವಸ್ಥೆಯ ಮೊದಲ ಅಂಗ ಯಾವುದು?"
+                    },
+                    options: {
+                        en: ["Mouth", "Stomach", "Small Intestine", "Esophagus"],
+                        hi: ["मुंह", "पेट", "छोटी आंत", "भोजन नली"],
+                        kn: ["ಬಾಯಿ", "ಹೊಟ್ಟೆ", "ಸಣ್ಣ ಕರುಳು", "ಅನ್ನನಾಳ"]
+                    },
+                    correct: 0
+                }
+                // Add more questions for each system
+            ]
+            // Add questions for other systems
+        };
+
+        function startLevel(system) {
+            bgMusic.play();
+            const gameArea = document.getElementById('gameArea');
+            gameArea.classList.remove('hidden');
+            loadQuestion(system);
+        }
+
+        function loadQuestion(system) {
+            const questionObj = questions[system][0]; // For demo, using first question
+            const questionElement = document.getElementById('question');
+            const optionsElement = document.getElementById('options');
+            
+            questionElement.textContent = questionObj.question[currentLanguage];
+            optionsElement.innerHTML = '';
+
+            questionObj.options[currentLanguage].forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'p-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors';
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index === questionObj.correct, system);
+                optionsElement.appendChild(button);
+            });
+        }
+
+        function checkAnswer(isCorrect, system) {
+            if (isCorrect) {
+                currentScore += 10;
+                document.getElementById('score').textContent = currentScore;
+            }
+            // Load next question or end game
+            loadQuestion(system);
+        }
+
+        // Initialize game
+        updateLanguage('en');
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
